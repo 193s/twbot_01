@@ -32,22 +32,23 @@ twitter.prototype.updateStatus = function(text) {
 
 var last_context = '0001';
 
-function ask(docomo_apikey, text, callback) {
+function ask(docomo_apikey, tweet, callback) {
+  var text = tweet.text.replace(new RegExp('^@' + bot_id + ' '), '');
+  var data = {
+    utt: text,
+    nickname: tweet.user.name,
+    sex: '女',
+    age: '16',
+    place: '東京',
+    t: 20, // 関西弁
+    context: last_context
+  }
   request.post ({
     url: 'https://api.apigw.smt.docomo.ne.jp/dialogue/v1/dialogue?APIKEY='+docomo_apikey,
-    json: {
-      utt: text,
-      nickname: 'ツイッター',
-      nickname_y: 'ツイッター',
-      sex: '女',
-      age: '16',
-      place: '東京',
-      t: 20,
-      context: last_context
-    }
+    json: data
   }, function(err, res, body) {
     if (err) throw err;
-    callback(body.utt);
+    callback(body.utt, data);
   });
 }
 
@@ -81,12 +82,10 @@ async.series ([
       console.log(data);
       if (!('user' in data)) return;
       var id = data.user.screen_name;
-      var text = data.text.replace(new RegExp('^@' + bot_id + ' '), '');
       var ifMention = data.in_reply_to_user_id != null;
       if (!ifMention || id == bot_id) return;
-      ask(docomo_apikey, text, function(res) {
+      ask(docomo_apikey, data, function(res, d) {
         var msg = '@' + id + ' ' + res;
-        console.log('text:', text);
         console.log('res:', res);
         last_context = res.context;
         bot.reply(msg, data.id_str);
