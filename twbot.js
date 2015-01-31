@@ -76,13 +76,13 @@ async.series ([
   var bot = results[0];
   var docomo_apikey = results[1];
 
-
-  bot.stream('user', function(stream) {
+  bot.stream('statuses/filter', {'track': '@' + bot_id}, function(stream) {
     stream.on('data', function(data) {
-      console.log(data);
-      if (!('user' in data)) return;
+      console.log(data.text);
+      // if (!('user' in data)) return;
       var id = data.user.screen_name;
       var ifMention = data.in_reply_to_user_id != null;
+
       if (!ifMention || id == bot_id) return;
       ask(docomo_apikey, data, function(res, d) {
         var msg = '@' + id + ' ' + res;
